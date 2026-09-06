@@ -7,9 +7,68 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <h1>SimpleCPP Configurator</h1>
+    <p class="subtitle">CPU-only llama-server launcher</p>
 
-  <!-- PyWebView will render this; any JS for interaction goes below -->
+    <section>
+      <h2>Model</h2>
+      <label for="model-path">Model file (.gguf)</label>
+      <div class="row">
+        <input type="text" id="model-path" placeholder="Path to model file" readonly />
+        <button id="browse-btn" type="button">Browse</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Server</h2>
+      <label for="port">Port</label>
+      <input type="number" id="port" value="8080" min="1" max="65535" step="1" />
+    </section>
+
+    <section>
+      <h2>Model parameters</h2>
+      <label for="n-threads">CPU threads (--n-threads)</label>
+      <input type="number" id="n-threads" value="8" min="1" step="1" />
+
+      <label for="ctx-size">Context size (--ctx-size)</label>
+      <input type="number" id="ctx-size" value="4096" min="512" step="512" />
+
+      <label for="batch-size">Batch size (--batch-size)</label>
+      <input type="number" id="batch-size" value="512" min="1" step="1" />
+
+      <label for="seed">Seed (--seed)</label>
+      <input type="number" id="seed" value="0" step="1" />
+    </section>
+
+    <section>
+      <h2>Generation parameters</h2>
+      <label for="temperature">Temperature (--temp)</label>
+      <input type="number" id="temperature" value="0.7" min="0" step="0.1" />
+
+      <label for="top-k">Top K (--top-k)</label>
+      <input type="number" id="top-k" value="40" min="1" step="1" />
+
+      <label for="top-p">Top P (--top-p)</label>
+      <input type="number" id="top-p" value="0.9" min="0" max="1" step="0.05" />
+
+      <label for="repetition-penalty">Repetition penalty (--repeat-penalty)</label>
+      <input type="number" id="repetition-penalty" value="1.1" min="0" step="0.05" />
+
+      <label for="max-tokens">Max output tokens (-n)</label>
+      <input type="number" id="max-tokens" value="2048" min="1" step="1" />
+
+      <label for="stop-sequences">Stop sequences (one per line, --reverse-prompt)</label>
+      <textarea id="stop-sequences" placeholder="One stop sequence per line"></textarea>
+    </section>
+
+    <section>
+      <button id="launch-btn" type="button">Launch Server</button>
+      <button id="stop-btn" type="button" class="secondary">Stop Server</button>
+      <div id="status" class="status">Server Status: Idle</div>
+    </section>
+  </div>
+
   <script src="webview.js"></script>
 </body>
 </html>

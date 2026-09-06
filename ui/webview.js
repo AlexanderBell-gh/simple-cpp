@@ -1,82 +1,128 @@
-// Minimal JS scaffolding for the PyWebView UI
-// (future: bind form fields, send commands to a backend API)
+// PyWebView UI bridge for SimpleCPP.
+// Single control path: pywebview.js_api. No HTTP fallback.
 
-document.addEventListener('DOMContentLoaded', () => {
+function setStatus(message) {
   const statusEl = document.getElementById('status');
   if (statusEl) {
-    statusEl.textContent = 'Server Status: Idle';
+    statusEl.textContent = message;
   }
+}
 
-  // Hook up launch button
-  const btn = document.querySelector('#launch-btn');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      // Gather inputs from the form
-      const nThreads = document.getElementById('n-threads')?.value?.trim() ?? '8';
-      const ctxSize = document.getElementById('ctx-size')?.value?.trim() ?? '4096';
-      const batchSize = document.getElementById('batch-size')?.value?.trim() ?? '512';
-      const seed = document.getElementById('seed')?.value?.trim() ?? '0';
-      const temperature = document.getElementById('temperature')?.value?.trim() ?? '0.7';
-      const topK = document.getElementById('top-k')?.value?.trim() ?? '40';
-      const topP = document.getElementById('top-p')?.value?.trim() ?? '0.9';
-      const repeatPenalty = document.getElementById('repetition-penalty')?.value?.trim() ?? '1.1';
-      const maxTokens = document.getElementById('max-tokens')?.value?.trim() ?? '2048';
-      const modelPath = document.getElementById('model-path')?.value?.trim();
-      const stopSeq = document.getElementById('stop-sequences')?.value?.trim();
+function bridge() {
+  if (window.pywebview && window.pywebview.api) {
+    return window.pywebview.api;
+  }
+  return null;
+}
 
-      // Validate model path exists
-      if (!modelPath) {
-        statusEl.textContent = 'Error: Model path not set.';
+function readNumber(id, fallback) {
+  const el = document.getElementById(id);
+  if (!el) {
+    return fallback;
+  }
+  const raw = el.value.trim();
+  if (raw === '') {
+    return fallback;
+  }
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+function readText(id, fallback) {
+  const el = document.getElementById(id);
+  if (!el) {
+    return fallback;
+  }
+  const raw = el.value.trim();
+  return raw === '' ? fallback : raw;
+}
+
+function collectConfig() {
+  const stopRaw = readText('stop-sequences', '');
+  return {
+    model_path: readText('model-path', ''),
+    port: readNumber('port', 8080),
+    n_threads: readNumber('n-threads', 8),
+    ctx_size: readNumber('ctx-size', 4096),
+    batch_size: readNumber('batch-size', 512),
+    seed: readNumber('seed', 0),
+    temperature: readNumber('temperature', 0.7),
+    top_k: readNumber('top-k', 40),
+    top_p: readNumber('top-p', 0.9),
+    repetition_penalty: readNumber('repetition-penalty', 1.1),
+    max_tokens: readNumber('max-tokens', 2048),
+    stop: stopRaw ? stopRaw.split('\n').map((s) => s.trim()).filter(Boolean) : [],
+  };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setStatus('Server Status: Idle');
+
+  const browseBtn = document.getElementById('browse-btn');
+  if (browseBtn) {
+    browseBtn.addEventListener('click', async () => {
+      const api = bridge();
+      if (!api) {
+        setStatus('Error: application bridge unavailable.');
         return;
       }
-      fetch('/api/launch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: modelPath,
-          args: [
-            '--n-gpu-layers', '0',
-            '--n-threads', nThreads,
-            '--ctx-size', ctxSize,
-            '--batch-size', batchSize,
-            '--seed', seed,
-            '-m', modelPath,
-            '--port', '8080',
-            '--temp', temperature,
-            '--top-k', topK,
-            '--top-p', topP,
-            '--repeat-penalty', repeatPenalty,
-            '-n', maxTokens,
-          ],
-          stop: stopSeq ? stopSeq.split('\n').map(s => s.trim()).filter(Boolean) : [],
-        }),
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) {
-          statusEl.textContent = `Error: ${data.error}`;
-        } else {
-          statusEl.textContent = data.message || 'Server launched';
+      try {
+        const path = await api.browse_for_model();
+        if (path) {
+          document.getElementById('model-path').value = path;
+          setStatus('Server Status: Idle');
         }
-      })
-      .catch(() => {
-        statusEl.textContent = 'Error communicating with backend.';
-      });
+      } catch (err) {
+        setStatus('Error browsing for model.');
+      }
     });
   }
 
-  // Hook up stop button
-  const stopBtn = document.querySelector('#stop-btn');
+  const launchBtn = document.getElementById('launch-btn');
+  if (launchBtn) {
+    launchBtn.addEventListener('click', async () => {
+      const api = bridge();
+      if (!api) {
+        setStatus('Error: application bridge unavailable.');
+        return;
+      }
+      const config = collectConfig();
+      if (!config.model_path) {
+        setStatus('Error: Model path not set. Use Browse to select a .gguf file.');
+        return;
+      }
+      setStatus('Launching server...');
+      try {
+        const result = await api.launch_engine(JSON.stringify(config));
+        if (result && typeof result === 'object') {
+          setStatus(result.message || (result.ok ? 'Server launched' : 'Launch failed'));
+        } else {
+          setStatus('Server launched');
+        }
+      } catch (err) {
+        setStatus('Error communicating with backend.');
+      }
+    });
+  }
+
+  const stopBtn = document.getElementById('stop-btn');
   if (stopBtn) {
-    stopBtn.addEventListener('click', () => {
-      fetch('/api/stop')
-        .then(r => r.json())
-        .then(data => {
-          statusEl.textContent = data.message || 'Server stopped';
-        })
-        .catch(() => {
-          statusEl.textContent = 'Error stopping server.';
-        });
+    stopBtn.addEventListener('click', async () => {
+      const api = bridge();
+      if (!api) {
+        setStatus('Error: application bridge unavailable.');
+        return;
+      }
+      try {
+        const result = await api.stop_engine();
+        if (result && typeof result === 'object') {
+          setStatus(result.message || 'Server stopped');
+        } else {
+          setStatus('Server stopped');
+        }
+      } catch (err) {
+        setStatus('Error stopping server.');
+      }
     });
   }
 });

@@ -37,13 +37,18 @@ label {
   margin-bottom: 4px;
 }
 
-input[type="text"] {
+input[type="text"],
+input[type="number"] {
   width: 100%;
   padding: 8px 12px;
   box-sizing: border-box;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1em;
+}
+
+input[readonly] {
+  background-color: #fafafa;
 }
 
 textarea {
@@ -72,7 +77,35 @@ button:hover {
   background-color: #1e5c3d;
 }
 
-.status {
+.status,
+#status {
   margin-top: 12px;
   font-weight: bold;
+}
+
+.subtitle {
+  margin-top: -8px;
+  color: #777;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.row input {
+  flex: 1;
+}
+
+.row button {
+  flex-shrink: 0;
+}
+
+button.secondary {
+  background-color: #6c757d;
+  margin-left: 8px;
+}
+
+button.secondary:hover {
+  background-color: #545b62;
 }
