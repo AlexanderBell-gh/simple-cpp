@@ -8,9 +8,9 @@ A PyWebView desktop application that manages official `llama-server.exe` as a su
 
 ## Status
 
-- UI shell and PyWebView bridge exist (`app.py`, `ui/`), including a native `.gguf` file picker.
-- Server manager (`server/manager.py`) is still a stub; launch wiring is TODO.
-- Packaging (`build.bat`) is under repair; see planning docs for the corrected command.
+- Phase 1 complete: skeleton plus CustomTkinter-to-PyWebView migration record.
+- Phase 2 complete: full settings form (`ui/index.html`), `js_api`-only bridge (`ui/webview.js`), `SimpleAPI` with file picker plus status-dict `launch_engine` / `stop_engine` stubs (`app.py`). Live window test needs a Windows host and moves with Phase 3.
+- Phase 3 open: `server/manager.py` HTTP implementation, `SimpleAPI` wiring, `build.bat` fix.
 
 Detailed architecture, flag mapping, and honest phase checklists live in `/home/wsl/Projects/markdowns/simpleCPP-markdowns/planning/` (`PROJECT.md`, `PHASE-1.md`, `PHASE-2.md`, `PHASE-3.md`).
 
@@ -53,10 +53,16 @@ pyinstaller --onefile --name SimpleCPP --add-data "ui;ui" --add-data "bin;bin" a
 
 Output: `dist/SimpleCPP.exe`, bundling the `ui/` assets and your local `bin/` release files.
 
+## Credits
+
+Inference is powered by [llama.cpp](https://github.com/ggerganov/llama.cpp) (Georgi Gerganov and contributors, MIT licensed). This project ships no inference code of its own: it wraps the official unmodified `llama-server` Windows binary in a CPU-focused settings UI, in the spirit of tools like KoboldCpp (a separate project by LostRuins, no affiliation).
+
+License duty: the `bin/` bundle redistributes llama.cpp binaries, so packaged builds must include llama.cpp's own `LICENSE` file next to them. Keep the upstream license text when copying a release ZIP into `bin/` and when bundling via PyInstaller.
+
 ## Project layout
 
-- `app.py` — PyWebView entry point and `SimpleAPI` JS bridge.
-- `ui/` — Frontend assets (`index.html`, `style.css`, `webview.js`).
+- `app.py` — PyWebView entry point and `SimpleAPI` JS bridge (`browse_for_model`, `launch_engine`, `stop_engine`).
+- `ui/` — Full settings form (`index.html`), styles (`style.css`), `js_api` bridge logic (`webview.js`).
 - `server/manager.py` — Subprocess manager for `llama-server.exe` (stub, HTTP implementation pending).
 - `bin/` — Local-only drop-in folder for the official release bundle (not committed).
 - `build.bat` — Windows packaging script (pending fix).

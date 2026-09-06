@@ -46,7 +46,7 @@ CPU-only builds should always pass `--n-gpu-layers 0` to `llama-server` in the `
   ```bash
   uv run app.py
   ```
-- Before launching: extract the official llama.cpp Windows release ZIP into `bin/` so `bin/llama-server.exe` is ready. The folder stays local-only and is never committed.
+- Before launching: extract the official llama.cpp Windows release ZIP into `bin/` so `bin/llama-server.exe` is ready. The folder stays local-only and is never committed. Keep the upstream llama.cpp `LICENSE` in the bundle; redistribution requires it.
 
 ## Known gaps (see planning docs for detail)
 
