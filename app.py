@@ -5,11 +5,14 @@ import urllib.parse
 import webbrowser
 import webview
 
+from server.manager import ServerManager
+
 
 class SimpleAPI:
     """Backend hooks exposed to the frontend via the PyWebView JS bridge."""
     def __init__(self):
         self._window = None
+        self._manager = None
 
     def set_window(self, window):
         self._window = window
@@ -30,7 +33,7 @@ class SimpleAPI:
         return result[0] if result else ""
 
     def launch_engine(self, config_payload_json):
-        """Validate launch config. Full ServerManager wiring lands in Phase 3."""
+        """Validate config and spawn llama-server via ServerManager. Blocks until ready or timeout."""
         try:
             config = json.loads(config_payload_json)
             print(f"[SimpleCPP] Launch requested: {config}")
@@ -39,17 +42,26 @@ class SimpleAPI:
             if not model_path:
                 return {"ok": False, "message": "Error: Model path not set."}
 
-            # TODO (Phase 3): construct ServerManager and call launch(config).
-            return {"ok": False, "message": "Server manager not implemented yet (Phase 3)."}
+            if not os.path.isfile(model_path):
+                return {"ok": False, "message": f"Error: Model file not found: {model_path}"}
+
+            self._manager = ServerManager()
+            return self._manager.launch(config)
 
         except Exception as e:
             print(f"[SimpleCPP ERROR] Configuration failure: {str(e)}")
             return {"ok": False, "message": f"Invalid configuration: {str(e)}"}
 
     def stop_engine(self):
-        """Stop the server. Full implementation lands in Phase 3."""
-        # TODO (Phase 3): call ServerManager.shutdown().
-        return {"ok": False, "message": "Server not running (Phase 3)."}
+        """Stop the server via ServerManager."""
+        if self._manager is None:
+            return {"ok": False, "message": "Server not running."}
+        try:
+            self._manager.shutdown()
+            self._manager = None
+            return {"ok": True, "message": "Server stopped."}
+        except Exception as e:
+            return {"ok": False, "message": f"Error stopping server: {e}"}
 
     def find_best_config(self, config_payload_json):
         """Open Google AI Mode with a prompt for suggested CPU settings."""

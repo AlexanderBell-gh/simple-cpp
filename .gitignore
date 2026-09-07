@@ -25,6 +25,9 @@ share/python-*.egg/
 # Binary release bundle (not tracked)
 bin/
 
+# Runtime logs
+logs/
+
 # PyInstaller
 *.manifest
 *.spec

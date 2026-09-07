@@ -10,7 +10,7 @@ A PyWebView desktop application that manages official `llama-server.exe` as a su
 
 - Phase 1 complete: skeleton plus CustomTkinter-to-PyWebView migration record.
 - Phase 2 complete: full settings form (`ui/index.html`), dark-only orange theme (`ui/style.css`), `js_api`-only bridge (`ui/webview.js`), `SimpleAPI` with file picker, status-dict `launch_engine` / `stop_engine` stubs, and `find_best_config` (Google AI Mode, `app.py`). Live window test needs a Windows host and moves with Phase 3.
-- Phase 3 open: `server/manager.py` HTTP implementation, `SimpleAPI` wiring, `build.bat` fix.
+- Phase 3 complete: `ServerManager` HTTP implementation (`server/manager.py`, health poll with 120s timeout, `logs/server.log`), `SimpleAPI` wiring (`launch_engine` validates model file then delegates; `stop_engine` shuts down), fixed `build.bat` (`app.py`, `--noconsole`, `ui/` + `bin/`). Live Windows run with a user-supplied `bin/` bundle is the remaining check.
 
 Detailed architecture, flag mapping, and honest phase checklists live in `/home/wsl/Projects/markdowns/simpleCPP-markdowns/planning/` (`PROJECT.md`, `PHASE-1.md`, `PHASE-2.md`, `PHASE-3.md`).
 
@@ -41,14 +41,14 @@ Run locally:
 uv run app.py
 ```
 
-Pick a `.gguf` model in the UI. Full launch control lands with Phase 3.
+Pick a `.gguf` model in the UI, tune the CPU parameters, then Launch. The backend spawns `llama-server.exe` and blocks until `/health` reports ready.
 
 ## Build
 
-After the Phase 3 `build.bat` fix, the standalone Windows build is:
+Standalone Windows build via `build.bat`, or manually:
 
 ```cmd
-pyinstaller --onefile --name SimpleCPP --add-data "ui;ui" --add-data "bin;bin" app.py
+pyinstaller --noconsole --clean --onefile --name SimpleCPP --add-data "ui;ui" --add-data "bin;bin" app.py
 ```
 
 Output: `dist/SimpleCPP.exe`, bundling the `ui/` assets and your local `bin/` release files.
@@ -63,6 +63,6 @@ License duty: the `bin/` bundle redistributes llama.cpp binaries, so packaged bu
 
 - `app.py` — PyWebView entry point and `SimpleAPI` JS bridge (`browse_for_model`, `launch_engine`, `stop_engine`, `find_best_config`).
 - `ui/` — Full settings form (`index.html`), dark-only orange styles (`style.css`), `js_api` bridge logic (`webview.js`).
-- `server/manager.py` — Subprocess manager for `llama-server.exe` (stub, HTTP implementation pending).
+- `server/manager.py` — Subprocess manager for `llama-server.exe` (HTTP health poll, `logs/server.log`, graceful shutdown).
 - `bin/` — Local-only drop-in folder for the official release bundle (not committed).
-- `build.bat` — Windows packaging script (pending fix).
+- `build.bat` — Windows packaging script.
