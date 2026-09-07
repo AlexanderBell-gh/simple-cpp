@@ -9,8 +9,8 @@ Control transport: the primary UI path is the PyWebView `js_api` bridge (`Simple
 ## Project layout
 
 - **Root**: `/mnt/c/Users/Development/Desktop/simple-cpp`
-  - `app.py` — PyWebView entry point with `SimpleAPI` JS bridge and EdgeChromium renderer. `browse_for_model` works via native file dialog. `launch_engine` validates config and returns a status dict (no window destroy); `stop_engine` stub added. Full manager wiring lands in Phase 3.
-  - `ui/` — Web frontend assets (`index.html`, `style.css`, `webview.js`). Full settings form (all parameter inputs plus `port`, Browse row, Launch / Stop, `#status`) wired to `js_api`; DOM/JS IDs verified in sync.
+  - `app.py` — PyWebView entry point with `SimpleAPI` JS bridge and EdgeChromium renderer. `browse_for_model` works via native file dialog. `launch_engine` validates config and returns a status dict (no window destroy); `stop_engine` stub added. `find_best_config` opens Google AI Mode (`udm=50`) with a model/CPU-aware prompt. Window `background_color` is dark (`#1e1e1e`). Full manager wiring lands in Phase 3.
+  - `ui/` — Web frontend assets (`index.html`, `style.css`, `webview.js`). Dark-only theme with solid orange primary buttons. Full settings form (all parameter inputs plus `port`, Browse row plus "Find best config for this model" button, Launch / Stop, `#status`) wired to `js_api`; DOM/JS IDs verified in sync.
   - `server/manager.py` — Stub backend for spawning and controlling `llama-server.exe`. All methods raise `NotImplementedError`. Full HTTP implementation lands in Phase 3.
   - `server/__init__.py` — Package init, re-exports `ServerManager`.
   - `bin/` — Gitignored drop-in folder, absent until the user extracts the official llama.cpp Windows release there (`llama-server.exe` plus runtime DLLs such as `ggml.dll` and `llama.dll`). The manager must run with `cwd=BIN_DIR` so Windows resolves those DLLs. Never committed.

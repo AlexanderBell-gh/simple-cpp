@@ -9,7 +9,7 @@ A PyWebView desktop application that manages official `llama-server.exe` as a su
 ## Status
 
 - Phase 1 complete: skeleton plus CustomTkinter-to-PyWebView migration record.
-- Phase 2 complete: full settings form (`ui/index.html`), `js_api`-only bridge (`ui/webview.js`), `SimpleAPI` with file picker plus status-dict `launch_engine` / `stop_engine` stubs (`app.py`). Live window test needs a Windows host and moves with Phase 3.
+- Phase 2 complete: full settings form (`ui/index.html`), dark-only orange theme (`ui/style.css`), `js_api`-only bridge (`ui/webview.js`), `SimpleAPI` with file picker, status-dict `launch_engine` / `stop_engine` stubs, and `find_best_config` (Google AI Mode, `app.py`). Live window test needs a Windows host and moves with Phase 3.
 - Phase 3 open: `server/manager.py` HTTP implementation, `SimpleAPI` wiring, `build.bat` fix.
 
 Detailed architecture, flag mapping, and honest phase checklists live in `/home/wsl/Projects/markdowns/simpleCPP-markdowns/planning/` (`PROJECT.md`, `PHASE-1.md`, `PHASE-2.md`, `PHASE-3.md`).
@@ -61,8 +61,8 @@ License duty: the `bin/` bundle redistributes llama.cpp binaries, so packaged bu
 
 ## Project layout
 
-- `app.py` — PyWebView entry point and `SimpleAPI` JS bridge (`browse_for_model`, `launch_engine`, `stop_engine`).
-- `ui/` — Full settings form (`index.html`), styles (`style.css`), `js_api` bridge logic (`webview.js`).
+- `app.py` — PyWebView entry point and `SimpleAPI` JS bridge (`browse_for_model`, `launch_engine`, `stop_engine`, `find_best_config`).
+- `ui/` — Full settings form (`index.html`), dark-only orange styles (`style.css`), `js_api` bridge logic (`webview.js`).
 - `server/manager.py` — Subprocess manager for `llama-server.exe` (stub, HTTP implementation pending).
 - `bin/` — Local-only drop-in folder for the official release bundle (not committed).
 - `build.bat` — Windows packaging script (pending fix).
