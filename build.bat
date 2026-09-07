@@ -5,6 +5,7 @@ echo [SimpleCPP Build System] Initiating standalone packaging...
 echo ===================================================
 
 :: Ensure dependencies are installed via uv (project is uv-managed)
+cd C:\Users\Development\Desktop\simple-cpp
 uv sync --quiet
 
 :: Flush previous build artifacts
