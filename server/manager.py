@@ -52,9 +52,8 @@ class ServerManager:
 
         args = [
             str(LLAMA_SERVER_PATH),
-            "--n-gpu-layers", "0",
             "-m", str(model_path),
-            "--n-threads", str(cfg.get("n_threads", 8)),
+            "-t", str(cfg.get("n_threads", 8)),
             "--ctx-size", str(cfg.get("ctx_size", 4096)),
             "--batch-size", str(cfg.get("batch_size", 512)),
             "--port", str(self._port),

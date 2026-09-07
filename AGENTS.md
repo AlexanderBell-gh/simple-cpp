@@ -1,54 +1,103 @@
-# simple-cpp — CPU-only llama.cpp launcher
+# simple-cpp — Agent Guide
 
-## Overview
+## Session Start
+> **Rule**: Activate the `/caveman` Skill at `full` intensity
 
-A lightweight, PyWebView UI application that manages `llama-server.exe` for local LLM inference. No GPU offloading; all settings are CPU parameters. The final product is a single Windows `.exe` built with PyInstaller that bundles both the web UI assets and the server release binaries.
+## Tech Stack
 
-Control transport: the primary UI path is the PyWebView `js_api` bridge (`SimpleAPI`), not HTTP endpoints. The backend controls `llama-server.exe` over HTTP (`GET /health`, `POST /v1/chat/completions`). Stdin-pipe control is rejected. `webview.js` uses `pywebview.api` exclusively; no `fetch('/api/*')` remains.
+| Layer | Stack |
+|-------|-------|
+| Framework | PyWebView (EdgeChromium) |
+| Backend | Python 3.14+ |
+| Server | llama.cpp Windows release (`llama-server.exe`) |
+| Packaging | PyInstaller 6.22.2 |
+| Package mgr | `uv` (no pip/npx — use `uv exec`) |
 
-## Project layout
+## Commands
 
-- **Root**: `/mnt/c/Users/Development/Desktop/simple-cpp`
-  - `app.py` — PyWebView entry point with `SimpleAPI` JS bridge and EdgeChromium renderer. `browse_for_model` works via native file dialog. `launch_engine` validates `model_path` exists on disk, then delegates to `ServerManager.launch` (blocks until `/health` ready or 120s timeout). `stop_engine` calls `ServerManager.shutdown`. `find_best_config` opens Google AI Mode (`udm=50`) with a model/CPU-aware prompt. Window `background_color` is dark (`#1e1e1e`).
-  - `ui/` — Web frontend assets (`index.html`, `style.css`, `webview.js`). Dark-only theme with solid orange primary buttons. Full settings form (all parameter inputs plus `port`, Browse row plus "Find best config for this model" button, Launch / Stop, `#status`) wired to `js_api`; DOM/JS IDs verified in sync.
-  - `server/manager.py` — `ServerManager` spawns `llama-server.exe` with `cwd=BIN_DIR`, maps config to CLI flags (`--n-gpu-layers 0` always), polls `GET /health` until ready or 120s timeout, captures output to `logs/server.log`. `shutdown` terminates, waits 10s, kills on timeout. `apply_config` deleted per decision; `chat_complete` deferred.
-  - `server/__init__.py` — Package init, re-exports `ServerManager`.
-  - `logs/` — Gitignored runtime log output (`server.log`), created on first launch.
-  - `bin/` — Gitignored drop-in folder, absent until the user extracts the official llama.cpp Windows release there (`llama-server.exe` plus runtime DLLs such as `ggml.dll` and `llama.dll`). The manager must run with `cwd=BIN_DIR` so Windows resolves those DLLs. Never committed.
-  - `build.bat` — Windows batch script for PyInstaller packaging. Fixed: targets `app.py` with `--noconsole --clean --onefile`, bundles `ui/` and `bin/` via `--add-data`, installs deps via `uv sync`.  - `pyproject.toml` — `uv`-managed project, `requires-python >=3.14`, dependencies `pywebview>=6.2.1` and `pyinstaller>=6.22.2`. App-only layout: `[tool.uv] package = false`, no `[build-system]`, no `[project.scripts]` entry; entry point is `app.py` run directly or frozen via PyInstaller.
+```bash
+uv sync              # install deps: pywebview, pyinstaller
+uv run app.py        # local dev server
+pyinstaller ...app.py   # bundle to single exe (Windows only)
+```
 
-- **Documentation**: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/`
-  - `planning/PROJECT.md` — Architecture overview, source truth, flag table, known gaps.
-  - `planning/PHASE-1.md` — Project skeleton plus migration record (Complete).
-  - `planning/PHASE-2.md` — PyWebView UI scaffolding, full form plus `js_api` bridge (Complete; live GUI run open).
-  - `planning/PHASE-3.md` — Server manager HTTP implementation plus packaging fix (Complete; live Windows run open).
+**No test framework exists.** There are no test scripts, test configs, or test files.
 
-## --n-gpu-layers 0--
+## Verify before committing
 
-CPU-only builds should always pass `--n-gpu-layers 0` to `llama-server` in the `ServerManager`, along with the correct CLI flag names documented in `planning/PROJECT.md` (`--temp` not `--temperature`, `--repeat-penalty` not `--repetition-penalty`, `-n` not `--max-tokens`, `--reverse-prompt` per stop sequence).
+CI mirrors local workflow: lint is not enforced, but PyInstaller requires the bundled binaries. Ensure `bin/llama-server.exe` and its DLLs (`ggml.dll`, `llama.dll`) are present before packaging.
 
-## Build notes
+```bash
+uv sync && uv run app.py  # quick local check
+```
 
-- **Package manager**: Use `uv` (managed via `pyproject.toml`, initialized with `uv init`)
-- Install dependencies:
-  ```bash
-  uv sync
-  ```
-  Or add explicitly:
-  ```bash
-  uv add "pywebview>=6.2.1" "pyinstaller>=6.22.2"
-  ```
-- Build on Windows using `build.bat` or run PyInstaller manually:
-  ```cmd
-  pyinstaller --noconsole --clean --onefile --name SimpleCPP --add-data "ui;ui" --add-data "bin;bin" app.py
-  ```- Run locally:
-  ```bash
-  uv run app.py
-  ```
-- Before launching: extract the official llama.cpp Windows release ZIP into `bin/` so `bin/llama-server.exe` is ready. The folder stays local-only and is never committed. Keep the upstream llama.cpp `LICENSE` in the bundle; redistribution requires it.
+## Repository structure
 
-## Known gaps (see planning docs for detail)
+> **simple-cpp repo root**: `/mnt/c/Users/Development/Desktop/simple-cpp`
 
-1. Live window test needs Windows host plus WebView2 — Phase 3 entry check.
-2. `chat_complete` deferred (no caller, no chat UI) — future phase.
-3. `src/` removed as dead code; `pyproject.toml` is app-only (`package = false`, no script entry).
+```
+app.py                 # PyWebView entry point, SimpleAPI JS bridge
+ui/                   # Frontend: index.html, style.css, webview.js
+server/              # llama.cpp manager
+  __init__.py         # exports ServerManager
+  manager.py          # launch/shutdown HTTP, always --n-gpu-layers 0
+logs/                 # gitignored; runtime server.log
+bin/                  # gitignored; drop-in for extracted llama.cpp release
+build.bat             # Windows-only PyInstaller bundle script
+pyproject.toml        # uv project config (package = false)
+```
+
+- Entry: `app.py` runs the WebView UI.
+- Settings form wires to `js_api`; no direct HTTP calls from client.
+- `server/manager.py` spawns `llama-server.exe` in `bin/`, polls `/health`, and logs to `logs/server.log`.
+- `bin/` must be populated locally before launching; never committed.
+
+## Key gotchas
+
+- **CPU-only**: `--n-gpu-layers 0` removed (caused crash on CPU builds). Use `-t N` for thread count instead.
+- **CLI flags**: `--temp`, `--repeat-penalty`, `-n` (not `--max-tokens`).
+- **PyInstaller bundling**: use `build.bat` on Windows with `--add-data "ui;ui"` and `--add-data "bin;bin"`.
+- **uv only**: npm/pip not available; use `uv exec` for one-off installs.
+- **No stdin-pipe**: control is via HTTP endpoints only.
+
+## Discovering recent changes
+
+```bash
+git log -n 5 --stat           # last 5 commits with file stats
+git status                    # uncommitted changes
+git diff                      # unstaged changes
+git diff --cached             # staged changes
+```
+
+## External Documentation
+
+- Planning docs: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/planning`
+
+## Session Lifecycle Rules
+
+### Multi-Doc Conclusion Protocol
+Whenever the user says "lets finish up and update the docs", you MUST perform the following documentation updates before stopping:
+
+1. **Update MEMORY.md:**
+   * Insert a reverse-chronological entry directly under the `## Session History` header.
+   * Location: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/MEMORY.md`
+ 
+ ### **Format:**
+     ### 📝 [DD-MM-YYYY] @ [GMT HH:MM 24-hr] | [Short Session Title]
+     * **Changes:** [One-sentence summary of what was accomplished].
+     * **Impacted Files:** `[file_1.ext]`, `[file_2.ext]`.
+     * **Left Off At:** [One-sentence summary of outstanding next steps].
+
+2. **Update CONTEXT.md:**
+   * Review the current architectural state, tech stack details, or data flows.
+   * Update any outdated sections to reflect the exact state of the codebase at the end of this session.
+   * Location: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/CONTEXT.md`
+
+3. **Update README.md:**
+   * Review `README.md`. If the session introduced new features, configuration keys (`.env`), or changed installation/build commands, update those specific sections. Do not alter stable project descriptions unless explicitly relevant.
+   * Location: `/mnt/c/Users/Development/Desktop/simple-cpp/README.md`
+
+4. **Guard AGENTS.md (Strict Rule):**
+   * **DO NOT** update `AGENTS.md` unless it is completely necessary. 
+   * Updates to this file are strictly reserved for critical, sweeping architectural shifts, fundamental changes to the core tech stack, or major global project rules. Do not modify it for routine features, refactors, or bug fixes - this is to be kept very lean.
+   * Location: `/mnt/c/Users/Development/Desktop/simple-cpp/AGENTS.md`

@@ -106,7 +106,7 @@ def main():
         js_api=api,
         width=980,
         height=680,
-        resizable=False,
+        resizable=True,
         background_color='#1e1e1e'
     )
     

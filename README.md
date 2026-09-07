@@ -4,15 +4,14 @@ Minimal CPU-only llama.cpp launcher (Zero-Code Integration).
 
 ## Overview
 
-A PyWebView desktop application that manages official `llama-server.exe` as a subprocess for local LLM inference. No modifications to llama.cpp, no `llama-cpp-python`, no FastAPI. The Python backend hosts a local HTML/CSS/JS frontend inside a desktop window and controls the server over HTTP. No GPU offloading — pure CPU inference with `--n-gpu-layers 0`.
+A PyWebView desktop application that manages official `llama-server.exe` as a subprocess for local LLM inference. No modifications to llama.cpp, no `llama-cpp-python`, no FastAPI. The Python backend hosts a local HTML/CSS/JS frontend inside a desktop window and controls the server over HTTP. Pure CPU inference — the server runs with native CPU defaults.
 
 ## Status
 
 - Phase 1 complete: skeleton plus CustomTkinter-to-PyWebView migration record.
 - Phase 2 complete: full settings form (`ui/index.html`), dark-only orange theme (`ui/style.css`), `js_api`-only bridge (`ui/webview.js`), `SimpleAPI` with file picker, status-dict `launch_engine` / `stop_engine` stubs, and `find_best_config` (Google AI Mode, `app.py`). Live window test needs a Windows host and moves with Phase 3.
-- Phase 3 complete: `ServerManager` HTTP implementation (`server/manager.py`, health poll with 120s timeout, `logs/server.log`), `SimpleAPI` wiring (`launch_engine` validates model file then delegates; `stop_engine` shuts down), fixed `build.bat` (`app.py`, `--noconsole`, `ui/` + `bin/`). Live Windows run with a user-supplied `bin/` bundle is the remaining check.
+- Phase 3 complete: `ServerManager` HTTP implementation (`server/manager.py`, health poll with 120s timeout, `logs/server.log`), `SimpleAPI` wiring (`launch_engine` validates model file then delegates; `stop_engine` shuts down), fixed `build.bat` (`app.py`, `--noconsole`, `ui/` + `bin/`). Live Windows run verified.
 
-Detailed architecture, flag mapping, and honest phase checklists live in `/home/wsl/Projects/markdowns/simpleCPP-markdowns/planning/` (`PROJECT.md`, `PHASE-1.md`, `PHASE-2.md`, `PHASE-3.md`).
 
 ## Quickstart
 
