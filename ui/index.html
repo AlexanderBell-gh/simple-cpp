@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="dark" />
   <title>Simple CPP — llama-server (CPU)</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -17,6 +18,9 @@
       <div class="row">
         <input type="text" id="model-path" placeholder="Path to model file" readonly />
         <button id="browse-btn" type="button">Browse</button>
+      </div>
+      <div class="row" style="margin-top: 8px;">
+        <button id="best-config-btn" type="button">Find best config for this model</button>
       </div>
     </section>
 

@@ -125,4 +125,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const bestConfigBtn = document.getElementById('best-config-btn');
+  if (bestConfigBtn) {
+    bestConfigBtn.addEventListener('click', async () => {
+      const api = bridge();
+      if (!api) {
+        setStatus('Error: application bridge unavailable.');
+        return;
+      }
+      const config = collectConfig();
+      if (!config.model_path) {
+        setStatus('Error: Model path not set. Use Browse to select a .gguf file.');
+        return;
+      }
+      setStatus('Opening Google AI Mode with suggested settings...');
+      try {
+        const result = await api.find_best_config(JSON.stringify(config));
+        if (result && typeof result === 'object') {
+          setStatus(result.message || 'Opened Google AI Mode with suggested settings.');
+        } else {
+          setStatus('Opened Google AI Mode with suggested settings.');
+        }
+      } catch (err) {
+        setStatus('Error opening Google AI Mode.');
+      }
+    });
+  }
 });

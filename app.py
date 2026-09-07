@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import urllib.parse
+import webbrowser
 import webview
 
 
@@ -49,6 +51,33 @@ class SimpleAPI:
         # TODO (Phase 3): call ServerManager.shutdown().
         return {"ok": False, "message": "Server not running (Phase 3)."}
 
+    def find_best_config(self, config_payload_json):
+        """Open Google AI Mode with a prompt for suggested CPU settings."""
+        try:
+            config = json.loads(config_payload_json)
+            model_path = config.get("model_path", "")
+
+            model_name = os.path.basename(model_path) if model_path else "unknown model"
+            size_note = ""
+            if model_path and os.path.isfile(model_path):
+                size_gb = os.path.getsize(model_path) / (1024 ** 3)
+                size_note = f" ({size_gb:.2f} GB)"
+
+            cpu_threads = os.cpu_count() or 8
+
+            prompt = (
+                f"Best CPU-only llama-server (llama.cpp) settings for {model_name}{size_note} "
+                f"on Windows with {cpu_threads} CPU threads. "
+                "Suggest --n-threads, --ctx-size, --batch-size, --temp, --top-k, --top-p, "
+                "--repeat-penalty for stable CPU inference. Include --n-gpu-layers 0."
+            )
+            url = "https://www.google.com/search?udm=50&q=" + urllib.parse.quote_plus(prompt)
+            webbrowser.open(url)
+            return {"ok": True, "message": "Opened Google AI Mode with suggested settings.", "url": url}
+        except Exception as e:
+            print(f"[SimpleCPP ERROR] Best-config failure: {str(e)}")
+            return {"ok": False, "message": f"Could not open Google AI Mode: {str(e)}"}
+
 
 def main():
     api = SimpleAPI()
@@ -66,7 +95,7 @@ def main():
         width=980,
         height=680,
         resizable=False,
-        background_color='#ffffff'
+        background_color='#1e1e1e'
     )
     
     api.set_window(window)
