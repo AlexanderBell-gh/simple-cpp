@@ -33,7 +33,7 @@ uv sync && uv run app.py  # quick local check
 
 ## Repository structure
 
-> **simple-cpp repo root**: `/mnt/c/Users/Development/Desktop/simple-cpp`
+> **simple-cpp repo root**: `/mnt/c/Users/Development/Documents/simple-cpp`
 
 ```
 app.py                 # PyWebView entry point, SimpleAPI JS bridge
@@ -71,7 +71,7 @@ git diff --cached             # staged changes
 
 ## External Documentation
 
-- Planning docs: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/planning`
+- Planning docs: `/home/wsl/Repositories/markdowns/simpleCPP-markdowns/planning`
 
 ## Session Lifecycle Rules
 
@@ -80,7 +80,7 @@ Whenever the user says "lets finish up and update the docs", you MUST perform th
 
 1. **Update MEMORY.md:**
    * Insert a reverse-chronological entry directly under the `## Session History` header.
-   * Location: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/MEMORY.md`
+   * Location: `/home/wsl/Repositories/markdowns/simpleCPP-markdowns/MEMORY.md`
  
  ### **Format:**
      ### 📝 [DD-MM-YYYY] @ [GMT HH:MM 24-hr] | [Short Session Title]
@@ -91,13 +91,13 @@ Whenever the user says "lets finish up and update the docs", you MUST perform th
 2. **Update CONTEXT.md:**
    * Review the current architectural state, tech stack details, or data flows.
    * Update any outdated sections to reflect the exact state of the codebase at the end of this session.
-   * Location: `/home/wsl/Projects/markdowns/simpleCPP-markdowns/CONTEXT.md`
+   * Location: `/home/wsl/Repositories/markdowns/simpleCPP-markdowns/CONTEXT.md`
 
 3. **Update README.md:**
    * Review `README.md`. If the session introduced new features, configuration keys (`.env`), or changed installation/build commands, update those specific sections. Do not alter stable project descriptions unless explicitly relevant.
-   * Location: `/mnt/c/Users/Development/Desktop/simple-cpp/README.md`
+   * Location: `/mnt/c/Users/Development/Documents/simple-cpp/README.md`
 
 4. **Guard AGENTS.md (Strict Rule):**
    * **DO NOT** update `AGENTS.md` unless it is completely necessary. 
    * Updates to this file are strictly reserved for critical, sweeping architectural shifts, fundamental changes to the core tech stack, or major global project rules. Do not modify it for routine features, refactors, or bug fixes - this is to be kept very lean.
-   * Location: `/mnt/c/Users/Development/Desktop/simple-cpp/AGENTS.md`
+   * Location: `/mnt/c/Users/Development/Documents/simple-cpp/AGENTS.md`
