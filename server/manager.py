@@ -30,6 +30,21 @@ class ServerManager:
             self._log_file.write(line)
             self._log_file.flush()
 
+    @property
+    def base_url(self) -> str:
+        """Public root URL of the managed server. The embedded llama-ui lives here."""
+        return f"http://127.0.0.1:{self._port}"
+
+    def _probe_ui(self) -> bool:
+        """Check whether this binary serves the embedded web UI at /."""
+        try:
+            req = urllib.request.Request(self.base_url + "/")
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                ctype = resp.headers.get("Content-Type", "")
+                return resp.status == 200 and "text/html" in ctype
+        except OSError:
+            return False
+
     def launch(self, cfg: dict[str, Any]) -> dict[str, Any]:
         """Spawn llama-server.exe and block until health endpoint returns 200."""
         if not LLAMA_SERVER_PATH.exists():
@@ -121,7 +136,12 @@ class ServerManager:
                 with urllib.request.urlopen(req, timeout=5) as resp:
                     if resp.status == 200:
                         self._log("Health check passed — server ready.")
-                        return {"ok": True, "message": f"Server ready on port {self._port}."}
+                        return {
+                            "ok": True,
+                            "message": f"Server ready on port {self._port}.",
+                            "url": self.base_url,
+                            "ui_available": self._probe_ui(),
+                        }
             except (urllib.error.URLError, ConnectionRefusedError, OSError):
                 pass
             time.sleep(HEALTH_POLL_INTERVAL)

@@ -63,6 +63,12 @@ class SimpleAPI:
         except Exception as e:
             return {"ok": False, "message": f"Error stopping server: {e}"}
 
+    def get_server_url(self):
+        """Return the running server root URL for the Chat tab iframe."""
+        if self._manager is None:
+            return {"ok": False, "message": "Server not running."}
+        return {"ok": True, "url": self._manager.base_url}
+
     def find_best_config(self, config_payload_json):
         """Open Google AI Mode with a prompt for suggested CPU settings."""
         try:
@@ -107,7 +113,7 @@ def main():
         width=980,
         height=680,
         resizable=True,
-        background_color='#1e1e1e'
+        background_color='#0d0d0d'
     )
     
     api.set_window(window)
