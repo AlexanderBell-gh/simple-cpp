@@ -55,56 +55,26 @@ function collectConfig() {
   };
 }
 
-// Chat tab state. Server URL comes from the backend; the iframe is only
-// ever pointed at a running server. Set true to jump to Chat on launch.
-const AUTO_SWITCH_TO_CHAT = false;
+// Chat button state. Server URL comes from backend; button enables only
+// when server runs and binary serves embedded llama-ui.
 let serverUrl = '';
 let uiAvailable = false;
 
-function setTab(name) {
-  const configTab = document.getElementById('tab-config');
-  const chatTab = document.getElementById('tab-chat');
-  const configView = document.getElementById('view-config');
-  const chatView = document.getElementById('view-chat');
-  const showChat = name === 'chat';
-  if (configTab) {
-    configTab.classList.toggle('active', !showChat);
-    configTab.setAttribute('aria-selected', String(!showChat));
-  }
-  if (chatTab) {
-    chatTab.classList.toggle('active', showChat);
-    chatTab.setAttribute('aria-selected', String(showChat));
-  }
-  if (configView) configView.hidden = showChat;
-  if (chatView) chatView.hidden = !showChat;
-}
-
-function refreshChatPane() {
-  const frame = document.getElementById('chat-frame');
+function refreshOpenChatButton() {
+  const btn = document.getElementById('open-chat-btn');
   const hint = document.getElementById('chat-hint');
-  const chatTab = document.getElementById('tab-chat');
-  if (!frame || !hint || !chatTab) {
+  if (!btn || !hint) {
     return;
   }
   if (serverUrl && uiAvailable) {
-    if (frame.getAttribute('src') !== serverUrl) {
-      frame.setAttribute('src', serverUrl);
-    }
-    frame.hidden = false;
-    hint.hidden = true;
-    chatTab.disabled = false;
+    btn.disabled = false;
+    hint.textContent = 'Chat UI ready.';
   } else if (serverUrl && !uiAvailable) {
-    frame.removeAttribute('src');
-    frame.hidden = true;
-    hint.hidden = false;
+    btn.disabled = true;
     hint.textContent = 'Server running, but this binary serves no embedded chat UI.';
-    chatTab.disabled = true;
   } else {
-    frame.removeAttribute('src');
-    frame.hidden = true;
-    hint.hidden = false;
+    btn.disabled = true;
     hint.textContent = 'Launch the server to open the chat UI.';
-    chatTab.disabled = true;
   }
 }
 
@@ -125,30 +95,9 @@ async function syncServerUrl() {
   }
 }
 
-function initTabs() {
-  const configTab = document.getElementById('tab-config');
-  const chatTab = document.getElementById('tab-chat');
-  if (configTab) {
-    configTab.addEventListener('click', () => setTab('config'));
-  }
-  if (chatTab) {
-    chatTab.addEventListener('click', async () => {
-      if (chatTab.disabled) {
-        return;
-      }
-      await syncServerUrl();
-      refreshChatPane();
-      if (serverUrl && uiAvailable) {
-        setTab('chat');
-      }
-    });
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   setStatus('Server Status: Idle');
-  initTabs();
-  refreshChatPane();
+  refreshOpenChatButton();
 
   const browseBtn = document.getElementById('browse-btn');
   if (browseBtn) {
@@ -200,10 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
           await syncServerUrl();
           uiAvailable = true;
         }
-        refreshChatPane();
-        if (AUTO_SWITCH_TO_CHAT && serverUrl && uiAvailable) {
-          setTab('chat');
-        }
+        refreshOpenChatButton();
       } catch (err) {
         setStatus('Error communicating with backend.');
       }
@@ -227,10 +173,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         serverUrl = '';
         uiAvailable = false;
-        refreshChatPane();
-        setTab('config');
+        refreshOpenChatButton();
       } catch (err) {
         setStatus('Error stopping server.');
+      }
+    });
+  }
+
+  const openChatBtn = document.getElementById('open-chat-btn');
+  if (openChatBtn) {
+    openChatBtn.addEventListener('click', async () => {
+      const api = bridge();
+      if (!api) {
+        setStatus('Error: application bridge unavailable.');
+        return;
+      }
+      await syncServerUrl();
+      refreshOpenChatButton();
+      if (!serverUrl || !uiAvailable) {
+        return;
+      }
+      try {
+        const result = await api.open_chat_ui();
+        if (result && typeof result === 'object' && !result.ok) {
+          setStatus(result.message || 'Could not open chat UI.');
+        }
+      } catch (err) {
+        setStatus('Error opening chat UI.');
       }
     });
   }

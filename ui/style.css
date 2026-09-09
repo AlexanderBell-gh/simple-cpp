@@ -1,5 +1,7 @@
 /* SimpleCPP UI theme — llama-ui design token port (dark-only).
- * Source: ggml-org/llama.cpp tools/ui src/app.css, master as of 2026-09-08.
+ * Source: ggml-org/llama.cpp tools/ui src/app.css, master as of 2026-09-09.
+ * buttonVariants + ActionIcon values verified 2026-09-09; all six variants
+ * and sizes ported as plain-CSS classes (see button block).
  * See DESIGN.md in simpleCPP-markdowns. Plain CSS, no Tailwind runtime.
  * oklch() values kept verbatim; EdgeChromium supports them. */
 :root {
@@ -189,10 +191,14 @@ button:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
 }
 
-/* Buttons mirror llama-ui shadcn buttonVariants (base + default/size + variants).
- * Ghost/link/outline/icon sizes and aria-invalid rings have no callers; skipped. */
+/* Buttons: plain-CSS port of llama-ui shadcn buttonVariants
+ * (button.svelte, verified 2026-09-09). Base = layout + default variant +
+ * default size, so plain <button> matches shadcn default/default.
+ * Variant classes: .secondary, .destructive, .ghost, .outline, .link.
+ * Size classes: .size-sm, .size-lg, .size-icon, .size-icon-sm, .size-icon-lg. */
 button {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
@@ -208,16 +214,64 @@ button {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
   cursor: pointer;
   outline: none;
-  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 button:hover {
   background-color: color-mix(in oklch, var(--primary) 90%, transparent);
 }
 
-button:disabled {
+button:disabled,
+button[aria-disabled="true"] {
   pointer-events: none;
   opacity: 0.5;
+}
+
+button[aria-invalid="true"] {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 40%, transparent);
+}
+
+button svg:not([class*="size-"]) {
+  width: 1rem;
+  height: 1rem;
+}
+
+button svg {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Sizes: sm, lg, icon, icon-sm, icon-lg (shadcn size/*) */
+button.size-sm {
+  min-height: 2rem;
+  gap: 0.375rem;
+  padding: 0 0.75rem;
+}
+
+button.size-lg {
+  min-height: 2.5rem;
+  padding: 0 1.5rem;
+  border-radius: var(--radius-lg);
+}
+
+button.size-icon {
+  min-height: 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+}
+
+button.size-icon-sm {
+  min-height: 1.25rem;
+  width: 1.25rem;
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+
+button.size-icon-lg {
+  min-height: 2.5rem;
+  width: 2.5rem;
+  padding: 0;
 }
 
 .status,
@@ -245,9 +299,27 @@ button:disabled {
   flex-shrink: 0;
 }
 
-/* Secondary variant (dark values): muted-foreground 15% fill, 25% on hover.
- * Solid --secondary/--accent first as fallback for runtimes without color-mix. */
+.row + .row {
+  margin-top: 8px;
+}
+
+/* Server action buttons: wrap on narrow windows, even gaps */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-row button {
+  margin-left: 0;
+}
+
+/* Secondary: light values first (upstream bg-background), dark-only
+ * values last. Solid --secondary/--accent stay as fallback where color-mix
+ * is missing. */
 button.secondary {
+  background-color: var(--background);
+  color: var(--foreground);
   background-color: var(--secondary);
   background-color: color-mix(in oklch, var(--muted-foreground) 15%, transparent);
   color: var(--secondary-foreground);
@@ -255,12 +327,18 @@ button.secondary {
 }
 
 button.secondary:hover {
+  background-color: color-mix(in oklch, var(--muted-foreground) 20%, transparent);
   background-color: var(--accent);
   background-color: color-mix(in oklch, var(--muted-foreground) 25%, transparent);
 }
 
-/* Destructive variant (dark values): destructive 60% fill, 90% on hover.
- * No caller yet; provided for parity (e.g. future Stop affordance). */
+/* .btn-row uses gap for spacing; kill legacy inline margins inside it */
+.btn-row button.secondary {
+  margin-left: 0;
+}
+
+/* Destructive: light solid first, dark 60% fill last (dark-only app).
+ * Hover 90% and white text match upstream light and dark. */
 button.destructive {
   background-color: var(--destructive);
   background-color: color-mix(in oklch, var(--destructive) 60%, transparent);
@@ -273,7 +351,48 @@ button.destructive:hover {
 
 button.destructive:focus-visible {
   border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 20%, transparent);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 40%, transparent);
+}
+
+/* Ghost: transparent, muted 10% hover, blurred like upstream */
+button.ghost {
+  background-color: transparent;
+  color: var(--foreground);
+  box-shadow: none;
+  backdrop-filter: blur(4px);
+}
+
+button.ghost:hover {
+  background-color: color-mix(in oklch, var(--muted-foreground) 10%, transparent);
+  color: var(--accent-foreground);
+}
+
+/* Outline: ghost hover plus input-color border and shadow */
+button.outline {
+  background-color: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--input);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  backdrop-filter: blur(4px);
+}
+
+button.outline:hover {
+  background-color: color-mix(in oklch, var(--muted-foreground) 10%, transparent);
+  color: var(--accent-foreground);
+}
+
+/* Link: primary text, underline on hover only */
+button.link {
+  background-color: transparent;
+  color: var(--primary);
+  box-shadow: none;
+  text-underline-offset: 4px;
+}
+
+button.link:hover {
+  background-color: transparent;
+  text-decoration: underline;
 }
 
 /* Utility for future chat scroll regions (llama-ui @layer utilities) */
@@ -286,41 +405,8 @@ button.destructive:focus-visible {
   display: none;
 }
 
-/* View tabs: quiet by default, secondary fill when active */
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-button.tab {
-  background-color: transparent;
-  color: var(--muted-foreground);
-  box-shadow: none;
-  min-height: 2rem;
-  padding: 0.375rem 0.875rem;
-}
-
-button.tab:hover {
-  background-color: var(--accent);
-  background-color: color-mix(in oklch, var(--muted-foreground) 25%, transparent);
-  color: var(--accent-foreground);
-}
-
-button.tab.active {
-  background-color: var(--secondary);
-  background-color: color-mix(in oklch, var(--muted-foreground) 15%, transparent);
-  color: var(--secondary-foreground);
-}
-
-/* Chat pane: embedded llama-ui fills the card */
-#chat-frame {
-  width: 100%;
-  height: 65vh;
-  min-height: 420px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background-color: var(--card);
+/* Chat hint under server actions: override .subtitle pull-up, keep air */
+#chat-hint {
+  margin-top: 8px;
+  margin-bottom: 0;
 }

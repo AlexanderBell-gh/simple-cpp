@@ -13,6 +13,7 @@ class SimpleAPI:
     def __init__(self):
         self._window = None
         self._manager = None
+        self._chat_window = None
 
     def set_window(self, window):
         self._window = window
@@ -54,6 +55,12 @@ class SimpleAPI:
 
     def stop_engine(self):
         """Stop the server via ServerManager."""
+        if self._chat_window is not None:
+            try:
+                self._chat_window.destroy()
+            except Exception:
+                pass
+            self._chat_window = None
         if self._manager is None:
             return {"ok": False, "message": "Server not running."}
         try:
@@ -64,10 +71,38 @@ class SimpleAPI:
             return {"ok": False, "message": f"Error stopping server: {e}"}
 
     def get_server_url(self):
-        """Return the running server root URL for the Chat tab iframe."""
+        """Return the running server root URL for the Open Chat UI button."""
         if self._manager is None:
             return {"ok": False, "message": "Server not running."}
         return {"ok": True, "url": self._manager.base_url}
+
+    def open_chat_ui(self):
+        """Open the embedded llama-ui in a second app window."""
+        if self._manager is None:
+            return {"ok": False, "message": "Server not running."}
+        url = self._manager.base_url
+        try:
+            if self._chat_window is not None:
+                try:
+                    self._chat_window.show()
+                    self._chat_window.bring_to_front()
+                    return {"ok": True, "message": "Chat window focused.", "url": url}
+                except Exception:
+                    self._chat_window = None
+            self._chat_window = webview.create_window(
+                title='SimpleCPP Chat — llama-ui',
+                url=url,
+                width=1024,
+                height=720,
+            )
+            try:
+                self._chat_window.show()
+            except Exception:
+                pass
+            return {"ok": True, "message": "Chat window opened.", "url": url}
+        except Exception as e:
+            self._chat_window = None
+            return {"ok": False, "message": f"Could not open chat UI: {e}"}
 
     def find_best_config(self, config_payload_json):
         """Open Google AI Mode with a prompt for suggested CPU settings."""

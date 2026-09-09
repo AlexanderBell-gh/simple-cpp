@@ -58,6 +58,9 @@ pyproject.toml        # uv project config (package = false)
 - **CLI flags**: `--temp`, `--repeat-penalty`, `-n` (not `--max-tokens`).
 - **PyInstaller bundling**: use `build.bat` on Windows with `--add-data "ui;ui"` and `--add-data "bin;bin"`.
 - **uv only**: npm/pip not available; use `uv exec` for one-off installs.
+- **uv Windows-only**: never run `uv sync`/`uv run` from WSL — WSL venv
+  symlinks (`lib64`) brick Windows `uv sync` with Access denied.
+  WSL is read/edit only; all runs happen on Windows.
 - **No stdin-pipe**: control is via HTTP endpoints only.
 
 ## Discovering recent changes

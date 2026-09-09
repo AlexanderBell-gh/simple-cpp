@@ -11,7 +11,7 @@ A PyWebView desktop application that manages official `llama-server.exe` as a su
 - Phase 1 complete: skeleton plus CustomTkinter-to-PyWebView migration record.
 - Phase 2 complete: full settings form (`ui/index.html`), dark-only orange theme (`ui/style.css`), `js_api`-only bridge (`ui/webview.js`), `SimpleAPI` with file picker, status-dict `launch_engine` / `stop_engine` stubs, and `find_best_config` (Google AI Mode, `app.py`). Live window test needs a Windows host and moves with Phase 3.
 - Phase 3 complete: `ServerManager` HTTP implementation (`server/manager.py`, health poll with 120s timeout, `logs/server.log`), `SimpleAPI` wiring (`launch_engine` validates model file then delegates; `stop_engine` shuts down), fixed `build.bat` (`app.py`, `--noconsole`, `ui/` + `bin/`). Live Windows run verified.
-- UI refresh: dark-only llama-ui design-token theme (`ui/style.css`, token source pinned in `DESIGN.md`), shadcn-style buttons (default/secondary/destructive, orange removed), and a Chat tab embedding the running server's own web UI (`get_server_url` bridge, iframe cleared on stop). Live Windows check open.
+- UI refresh: dark-only llama-ui design-token theme (`ui/style.css`, token source pinned in `DESIGN.md`), full shadcn-style button port (all six variants plus sizes, orange removed), and an Open Chat UI button launching the running server's own web UI in a second window (Chat tab removed, closed on stop). UI probe sends `Accept-Encoding: gzip` (default UI builds 415 without it). Live Windows check passed.
 
 
 ## Quickstart
@@ -41,7 +41,9 @@ Run locally:
 uv run app.py
 ```
 
-Pick a `.gguf` model in the UI, tune the CPU parameters, then Launch. The backend spawns `llama-server.exe` and blocks until `/health` reports ready.
+Pick a `.gguf` model in the UI, tune the CPU parameters, then Launch. The backend spawns `llama-server.exe` and blocks until `/health` reports ready. Once ready, Open Chat UI launches the server's own web UI in a second window.
+
+> Windows host only: run all `uv` commands in PowerShell, never from WSL — a WSL-built `.venv` breaks Windows `uv sync` (Access denied on `lib64`).
 
 ## Build
 
@@ -61,8 +63,8 @@ License duty: the `bin/` bundle redistributes llama.cpp binaries, so packaged bu
 
 ## Project layout
 
-- `app.py` — PyWebView entry point and `SimpleAPI` JS bridge (`browse_for_model`, `launch_engine`, `stop_engine`, `get_server_url`, `find_best_config`).
-- `ui/` — Configurator + Chat tabs (`index.html`), dark-only llama-ui token theme (`style.css`), `js_api` bridge and tab/iframe logic (`webview.js`). The Chat tab embeds the server's own llama-ui at its root URL once launched.
+- `app.py` — PyWebView entry point and `SimpleAPI` JS bridge (`browse_for_model`, `launch_engine`, `stop_engine`, `get_server_url`, `open_chat_ui`, `find_best_config`).
+- `ui/` — Single-view Configurator (`index.html`), dark-only llama-ui token theme with full button-variant port (`style.css`), `js_api` bridge and chat-button state (`webview.js`). Open Chat UI opens the server's own llama-ui in a second window once launched.
 - `server/manager.py` — Subprocess manager for `llama-server.exe` (HTTP health poll, `logs/server.log`, graceful shutdown).
 - `bin/` — Local-only drop-in folder for the official release bundle (not committed).
 - `build.bat` — Windows packaging script.

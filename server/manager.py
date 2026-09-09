@@ -35,15 +35,35 @@ class ServerManager:
         """Public root URL of the managed server. The embedded llama-ui lives here."""
         return f"http://127.0.0.1:{self._port}"
 
-    def _probe_ui(self) -> bool:
-        """Check whether this binary serves the embedded web UI at /."""
+    def _probe_path(self, path: str) -> tuple[bool, str]:
+        """Probe one UI path. Returns (available, reason)."""
         try:
-            req = urllib.request.Request(self.base_url + "/")
+            req = urllib.request.Request(
+                self.base_url + path,
+                # Default UI builds gzip assets and answer 415 without this header.
+                headers={"Accept-Encoding": "gzip"},
+            )
             with urllib.request.urlopen(req, timeout=5) as resp:
                 ctype = resp.headers.get("Content-Type", "")
-                return resp.status == 200 and "text/html" in ctype
-        except OSError:
-            return False
+                ok = resp.status == 200 and "text/html" in ctype
+                return ok, f"{path}: {resp.status} {ctype or 'no content-type'}"
+        except urllib.error.HTTPError as e:
+            return False, f"{path}: HTTP {e.code}"
+        except OSError as e:
+            return False, f"{path}: {type(e).__name__}: {e}"
+
+    def _probe_ui(self) -> tuple[bool, str]:
+        """Check whether this binary serves the embedded web UI.
+
+        Returns (available, reason). The reason is logged and surfaced in
+        the launch result for diagnosis.
+        """
+        for path in ("/", "/index.html"):
+            ok, reason = self._probe_path(path)
+            if ok:
+                return True, reason
+            last_reason = reason
+        return False, last_reason
 
     def launch(self, cfg: dict[str, Any]) -> dict[str, Any]:
         """Spawn llama-server.exe and block until health endpoint returns 200."""
@@ -136,11 +156,14 @@ class ServerManager:
                 with urllib.request.urlopen(req, timeout=5) as resp:
                     if resp.status == 200:
                         self._log("Health check passed — server ready.")
+                        ui_available, ui_reason = self._probe_ui()
+                        self._log(f"UI probe: {ui_reason}")
                         return {
                             "ok": True,
                             "message": f"Server ready on port {self._port}.",
                             "url": self.base_url,
-                            "ui_available": self._probe_ui(),
+                            "ui_available": ui_available,
+                            "ui_reason": ui_reason,
                         }
             except (urllib.error.URLError, ConnectionRefusedError, OSError):
                 pass

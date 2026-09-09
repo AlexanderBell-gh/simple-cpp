@@ -9,12 +9,6 @@
 </head>
 <body>
   <div id="app">
-    <div class="tabs" role="tablist" aria-label="Views">
-      <button id="tab-config" type="button" role="tab" aria-selected="true" aria-controls="view-config" class="tab active">Configurator</button>
-      <button id="tab-chat" type="button" role="tab" aria-selected="false" aria-controls="view-chat" class="tab" disabled>Chat</button>
-    </div>
-
-    <div id="view-config" role="tabpanel" aria-labelledby="tab-config">
     <h1>SimpleCPP Configurator</h1>
     <p class="subtitle">CPU-only llama-server launcher</p>
 
@@ -25,7 +19,7 @@
         <input type="text" id="model-path" placeholder="Path to model file" readonly />
         <button id="browse-btn" type="button">Browse</button>
       </div>
-      <div class="row" style="margin-top: 8px;">
+      <div class="row">
         <button id="best-config-btn" type="button">Find best config for this model</button>
       </div>
     </section>
@@ -73,17 +67,14 @@
     </section>
 
     <section>
-      <button id="launch-btn" type="button">Launch Server</button>
-      <button id="stop-btn" type="button" class="secondary">Stop Server</button>
-      <div id="status" class="status">Server Status: Idle</div>
-    </section>
-    </div>
-
-    <div id="view-chat" role="tabpanel" aria-labelledby="tab-chat" hidden>
-      <h1>Chat</h1>
+      <div class="btn-row">
+        <button id="launch-btn" type="button">Launch Server</button>
+        <button id="stop-btn" type="button" class="secondary">Stop Server</button>
+        <button id="open-chat-btn" type="button" class="secondary" disabled>Open Chat UI</button>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite">Server Status: Idle</div>
       <p class="subtitle" id="chat-hint">Launch the server to open the chat UI.</p>
-      <iframe id="chat-frame" title="llama-ui chat" hidden></iframe>
-    </div>
+    </section>
   </div>
 
   <script src="webview.js"></script>
