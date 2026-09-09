@@ -1,6 +1,6 @@
 # simple-cpp
 
-Minimal CPU-only llama.cpp launcher (Zero-Code Integration).
+Minimal CPU-only llama-server launcher.
 
 ## Overview
 
